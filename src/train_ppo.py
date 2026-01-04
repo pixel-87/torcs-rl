@@ -27,11 +27,23 @@ try:
     import gym_torcs.snakeoil3_gym as snakeoil3
     import gym_torcs.torcs_env as torcs_env
 except ImportError as e:
-    print(f"Warning: Failed to import gym_torcs: {e}")
-    # Define dummy modules for smoke testing if needed
+    print(f"Warning: Failed to import gym and/or gym_torcs: {e}")
+    # Define dummy modules for smoke testing if needed, but make env creation fail clearly
     snakeoil3 = None
     torcs_env = None
 
+    def _gym_make_unavailable(*args, **kwargs):
+        raise ImportError(
+            "Environment creation requested, but 'gym' and/or 'gym_torcs' failed to import. "
+            "Please ensure both 'gym' and 'gym-torcs' are installed and importable."
+        ) from e
+
+    class _DummyGym:
+        """Fallback gym-like object used when gym/gym_torcs import fails."""
+        pass
+
+    gym = _DummyGym()
+    gym.make = _gym_make_unavailable
 # Restore sys.argv for argparse
 sys.argv = original_argv
 
