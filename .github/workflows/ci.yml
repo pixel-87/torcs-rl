@@ -16,4 +16,4 @@ jobs:
 
     - name: Run Smoke Test
       run: |
-        nix develop --command bash -c "uv sync && ./scripts/quick_test.sh"
+        nix develop --command bash -c "uv sync && xvfb-run -a ./scripts/quick_test.sh"
