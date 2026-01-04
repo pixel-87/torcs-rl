@@ -177,6 +177,7 @@ def main(args):
 
 
 if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train PPO on TORCS')
     parser.add_argument('--env-id', default='Torcs-v0', help='Gym environment ID')
     parser.add_argument('--total-timesteps', type=int, default=100000, help='Total training steps')

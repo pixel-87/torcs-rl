@@ -47,26 +47,30 @@ sys.argv = original_argv
 
 from src.agents.baseline import PurePursuitAgent
 
-print("Connecting to TORCS (should already be running on port 3001)...")
-env = gym.make('Torcs-v0', vision=False, rendering=True, throttle=True, gear_change=False, rank=1)
+def main():
+    print("Connecting to TORCS (should already be running on port 3001)...")
+    env = gym.make('Torcs-v0', vision=False, rendering=True, throttle=True, gear_change=False, rank=1)
 
-agent = PurePursuitAgent()
-print("Running 1 episode...\n")
+    agent = PurePursuitAgent()
+    print("Running 1 episode...\n")
 
-obs = env.reset()
-done = False
-reward_sum = 0.0
-steps = 0
+    obs = env.reset()
+    done = False
+    reward_sum = 0.0
+    steps = 0
 
-while not done and steps < 1000:
-    action = agent.predict(obs)
-    obs, reward, done, info = env.step(action)
-    reward_sum += reward
-    steps += 1
-    
-    if steps % 100 == 0:
-        print(f"Step {steps}, reward: {reward_sum:.2f}")
+    while not done and steps < 1000:
+        action = agent.predict(obs)
+        obs, reward, done, info = env.step(action)
+        reward_sum += reward
+        steps += 1
+        
+        if steps % 100 == 0:
+            print(f"Step {steps}, reward: {reward_sum:.2f}")
 
-print(f"\n✓ SUCCESS!")
-print(f"Total reward: {reward_sum:.2f}, Steps: {steps}")
-env.close()
+    print(f"\n✓ SUCCESS!")
+    print(f"Total reward: {reward_sum:.2f}, Steps: {steps}")
+    env.close()
+
+if __name__ == "__main__":
+    main()
