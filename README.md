@@ -5,8 +5,8 @@ Training RL agents on the TORCS racing simulator using gym-torcs and stable-base
 ## Quick Start
 
 ```bash
-nix develop
-uv sync
+nix develop # Optional! Install deps manually otherwise
+uv sync # Python deps
 uv run python eval_agent.py --baseline --num-episodes 2
 ```
 
