@@ -1,0 +1,58 @@
+[project]
+name = "torcs-rl"
+version = "0.1.0"
+description = "Reinforcement Learning agents for TORCS racing simulator"
+requires-python = ">=3.10"
+dynamic = []
+
+dependencies = [
+    # TORCS wrapper (vendored locally)
+    # "gym-torcs @ git+https://github.com/dosssman/GymTorcs.git",
+    # RL libraries
+    "stable-baselines3[extra]>=2.0",
+    "gymnasium>=0.29",
+    "gym>=0.26", # Required by vendored gym_torcs
+    # Core dependencies
+    "numpy>=1.24",
+    "pandas>=2.0",
+    # Logging & visualization
+    "tensorboard>=2.14",
+    "wandb>=0.16",
+    # Utilities
+    "tqdm>=4.66",
+    "pyyaml>=6.0",
+    "shimmy>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.0",
+    "ruff>=0.1",
+    "mypy>=1.7",
+    "ipython>=8.0",
+    "jupyter>=1.0",
+]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "W", "I"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

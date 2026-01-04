@@ -1,0 +1,7 @@
+__pycache__/
+result/
+logs/
+archive/
+torcs_server.log
+*.egg-info/
+*.zip
