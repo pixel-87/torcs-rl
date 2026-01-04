@@ -16,11 +16,9 @@ sys.argv = [sys.argv[0]]
 
 try:
     import gym
-    import gym_torcs
     import gym_torcs.torcs_env as torcs_env
 except ImportError:
     gym = None
-    gym_torcs = None
     torcs_env = None
 
 # Restore sys.argv
