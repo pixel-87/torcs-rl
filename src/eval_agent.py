@@ -4,7 +4,6 @@ Run agent - assumes TORCS is already running manually
 """
 import sys
 import subprocess
-import os
 import numpy as np
 
 # Fix numpy compatibility with old gym
