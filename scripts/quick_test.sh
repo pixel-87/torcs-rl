@@ -29,7 +29,7 @@ sleep 3
 
 # Run the agent
 echo "Starting agent..."
-PYTHONUNBUFFERED=1 uv run python eval_agent.py
+PYTHONUNBUFFERED=1 uv run python src/eval_agent.py
 
 # Cleanup
 echo

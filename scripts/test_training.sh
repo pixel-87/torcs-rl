@@ -29,7 +29,7 @@ sleep 3
 
 # Run the training script (short run)
 echo "Starting PPO training (smoke test)..."
-PYTHONUNBUFFERED=1 uv run python train_ppo.py --total-timesteps 100 --num-envs 1 || echo "Training failed with exit code $?"
+PYTHONUNBUFFERED=1 uv run python src/train_ppo.py --total-timesteps 100 --num-envs 1 || echo "Training failed with exit code $?"
 
 # Cleanup
 echo

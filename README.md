@@ -7,7 +7,7 @@ Training RL agents on the TORCS racing simulator using gym-torcs and stable-base
 ```bash
 nix develop # Optional! Install deps manually otherwise
 uv sync # Python deps
-uv run python eval_agent.py --baseline --num-episodes 2
+uv run python src/eval_agent.py --baseline --num-episodes 2
 ```
 
 ## Features
@@ -19,10 +19,10 @@ uv run python eval_agent.py --baseline --num-episodes 2
 
 ## Files
 
-- `gym_torcs/`: Vendored and patched TORCS environment wrapper
-- `agents/baseline.py`: Pure pursuit and random agents
-- `train_ppo.py`: PPO training script
-- `eval_agent.py`: Evaluation script
+- `src/agents/baseline.py`: Pure pursuit and random agents
+- `src/train_ppo.py`: PPO training script
+- `src/eval_agent.py`: Evaluation script
+- `scripts/`: Helper scripts for testing and CI
 - `SETUP.md`: Full documentation
 
 ## Resources

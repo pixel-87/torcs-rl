@@ -45,7 +45,7 @@ import numpy as np
 
 sys.argv = original_argv
 
-from agents.baseline import PurePursuitAgent
+from src.agents.baseline import PurePursuitAgent
 
 print("Connecting to TORCS (should already be running on port 3001)...")
 env = gym.make('Torcs-v0', vision=False, rendering=True, throttle=True, gear_change=False, rank=1)
