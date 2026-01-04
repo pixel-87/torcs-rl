@@ -56,6 +56,9 @@ if torcs_env:
 
 def main():
     print("Connecting to TORCS (should already be running on port 3001)...")
+    if gym is None:
+        print("ERROR: gym or gym_torcs is not available. Please ensure both 'gym' and 'gym_torcs' are installed and importable.")
+        sys.exit(1)
     env = gym.make('Torcs-v0', vision=False, rendering=True, throttle=True, gear_change=False, rank=1)
 
     agent = PurePursuitAgent()
