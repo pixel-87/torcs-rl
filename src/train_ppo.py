@@ -9,60 +9,52 @@ Usage:
 import sys
 import argparse
 import numpy as np
-
-# Fix numpy compatibility with old gym
-if not hasattr(np, 'bool8'):
-    np.bool8 = np.bool_
-
-# Prevent gym-torcs from launching TORCS
-import subprocess
-original_popen = subprocess.Popen
-def no_launch_popen(args, **kwargs):
-    if isinstance(args, list) and args and 'torcs' in str(args[0]):
-        print("[SKIP] Not auto-launching TORCS (should be running manually)")
-        # Return a dummy process that does nothing
-        return original_popen(['sleep', '999999'], **kwargs)
-    return original_popen(args, **kwargs)
-
-subprocess.Popen = no_launch_popen
-
-# Patch gym-torcs observation handler to fix missing 'lap' key
-try:
-    import gym_torcs.torcs_env as torcs_env
-    original_make_obs = torcs_env.TorcsEnv.make_observaton
-
-    def patched_make_obs(self, raw_obs):
-        """Add missing keys with defaults"""
-        if 'lap' not in raw_obs:
-            raw_obs['lap'] = 0
-        if 'racePos' not in raw_obs:
-            raw_obs['racePos'] = 1
-        return original_make_obs(self, raw_obs)
-
-    torcs_env.TorcsEnv.make_observaton = patched_make_obs
-except ImportError:
-    pass
-
-# Save original sys.argv before gym_torcs reads it
-original_argv = sys.argv.copy()
-sys.argv = [sys.argv[0]]
-
-import gym  # gym-torcs uses old gym API
-import gym_torcs
-import gym_torcs.snakeoil3_gym as snakeoil3
-
-# Patch snakeoil3 to not parse command line args
-# This prevents it from choking on our argparse arguments
-snakeoil3.Client.parse_the_command_line = lambda self: None
-
-# Restore sys.argv for argparse
-sys.argv = original_argv
-
+import os
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
-import os
 
+from src.torcs_patches import (
+    patch_numpy,
+    patch_sys_argv,
+    patch_subprocess,
+    patch_torcs_env_observation,
+    patch_snakeoil
+)
+
+# Apply patches
+patch_numpy()
+patch_subprocess()
+
+# Import gym_torcs with sys.argv patch
+with patch_sys_argv():
+    try:
+        import gym
+        import gym_torcs
+        import gym_torcs.snakeoil3_gym as snakeoil3
+        import gym_torcs.torcs_env as torcs_env
+    except ImportError as e:
+        print(f"Warning: Failed to import gym and/or gym_torcs: {e}")
+        # Define dummy modules for smoke testing if needed, but make env creation fail clearly
+        snakeoil3 = None
+        torcs_env = None
+
+        def _gym_make_unavailable(*args, **kwargs):
+            raise ImportError(
+                "Environment creation requested, but 'gym' and/or 'gym_torcs' failed to import. "
+                "Please ensure both 'gym' and 'gym-torcs' are installed and importable."
+            ) from e
+
+        class _DummyGym:
+            """Fallback gym-like object used when gym/gym_torcs import fails."""
+            pass
+
+        gym = _DummyGym()
+        gym.make = _gym_make_unavailable
+
+# Patch snakeoil and torcs_env
+patch_snakeoil(snakeoil3)
+patch_torcs_env_observation(torcs_env)
 
 def observation_preprocessor(dict_obs):
     """Preprocess gym_torcs dict observation to flat array for RL."""
@@ -100,26 +92,22 @@ def make_env(env_id, rank=0, seed=None):
     """Create a single environment."""
     def _init():
         # Clear sys.argv before gym.make() since gym_torcs parses it
-        saved_argv = sys.argv.copy()
-        sys.argv = [sys.argv[0]]
+        with patch_sys_argv():
+            env = gym.make(
+                env_id,
+                vision=False,
+                rendering=False,  # Try disabling rendering with -T flag
+                obs_preprocess_fn=observation_preprocessor,
+                obs_vars=[
+                    'angle', 'track', 'trackPos', 'speedX', 'speedY', 'speedZ',
+                    'wheelSpinVel', 'rpm', 'opponents'
+                ],
+                throttle=True,
+                gear_change=True,
+                rank=rank,
+                hard_reset_interval=999999,  # Avoid restarting TORCS during training
+            )
         
-        env = gym.make(
-            env_id,
-            vision=False,
-            rendering=False,  # Try disabling rendering with -T flag
-            obs_preprocess_fn=observation_preprocessor,
-            obs_vars=[
-                'angle', 'track', 'trackPos', 'speedX', 'speedY', 'speedZ',
-                'wheelSpinVel', 'rpm', 'opponents'
-            ],
-            throttle=True,
-            gear_change=True,
-            rank=rank,
-            hard_reset_interval=999999,  # Avoid restarting TORCS during training
-        )
-        
-        # Restore sys.argv
-        sys.argv = saved_argv
         if seed is not None:
             env.seed(seed + rank)
         return env
@@ -176,7 +164,7 @@ def main(args):
     env.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train PPO on TORCS')
     parser.add_argument('--env-id', default='Torcs-v0', help='Gym environment ID')
     parser.add_argument('--total-timesteps', type=int, default=100000, help='Total training steps')
