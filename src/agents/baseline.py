@@ -11,15 +11,11 @@ import sys
 import numpy as np
 from typing import Dict, Tuple
 
-# Save original sys.argv before gym_torcs reads it
-original_argv = sys.argv.copy()
-sys.argv = [sys.argv[0]]
+from src.torcs_patches import patch_sys_argv
 
-import gym  # gym-torcs uses old gym API
-import gym_torcs
-
-# Restore sys.argv
-sys.argv = original_argv
+with patch_sys_argv():
+    import gym  # gym-torcs uses old gym API
+    import gym_torcs
 
 
 class PurePursuitAgent:

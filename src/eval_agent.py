@@ -3,60 +3,47 @@
 Run agent - assumes TORCS is already running manually
 """
 import sys
-import subprocess
 import numpy as np
+from typing import Optional
 
-# Fix numpy compatibility with old gym
-if not hasattr(np, 'bool8'):
-    np.bool8 = np.bool_
+# Import patches
+from src.torcs_patches import (
+    patch_numpy,
+    patch_sys_argv,
+    patch_subprocess,
+    patch_torcs_env_observation
+)
 
-# Save original sys.argv before gym_torcs reads it
-original_argv = sys.argv.copy()
-sys.argv = [sys.argv[0]]
+# Apply patches
+patch_numpy()
+patch_subprocess()
 
-try:
-    import gym
-    import gym_torcs.torcs_env as torcs_env
-except ImportError:
-    gym = None
-    torcs_env = None
-
-# Restore sys.argv
-sys.argv = original_argv
+# Import gym and gym_torcs with sys.argv patch
+with patch_sys_argv():
+    try:
+        import gym
+        import gym_torcs.torcs_env as torcs_env
+    except ImportError:
+        gym = None
+        torcs_env = None
 
 from src.agents.baseline import PurePursuitAgent
 
-# Prevent gym-torcs from launching TORCS
-original_popen = subprocess.Popen
-def no_launch_popen(args, **kwargs):
-    if isinstance(args, list) and args and 'torcs' in str(args[0]):
-        print("[SKIP] Not auto-launching TORCS (should be running manually)")
-        # Return a dummy process that does nothing
-        return original_popen(['sleep', '999999'], **kwargs)
-    return original_popen(args, **kwargs)
-
-subprocess.Popen = no_launch_popen
-
-# Patch gym-torcs observation handler to fix missing 'lap' key
+# Patch observation
 if torcs_env:
-    original_make_obs = torcs_env.TorcsEnv.make_observaton
-
-    def patched_make_obs(self, raw_obs):
-        """Add missing keys with defaults"""
-        if 'lap' not in raw_obs:
-            raw_obs['lap'] = 0
-        if 'racePos' not in raw_obs:
-            raw_obs['racePos'] = 1
-        return original_make_obs(self, raw_obs)
-
-    torcs_env.TorcsEnv.make_observaton = patched_make_obs
+    patch_torcs_env_observation(torcs_env)
 
 def main():
     print("Connecting to TORCS (should already be running on port 3001)...")
-    if gym is None:
+    if gym is None or torcs_env is None:
         print("ERROR: gym or gym_torcs is not available. Please ensure both 'gym' and 'gym_torcs' are installed and importable.")
         sys.exit(1)
-    env = gym.make('Torcs-v0', vision=False, rendering=True, throttle=True, gear_change=False, rank=1)
+        
+    try:
+        env = gym.make('Torcs-v0', vision=False, rendering=True, throttle=True, gear_change=False, rank=1)
+    except Exception as e:
+        print(f"Failed to create environment: {e}")
+        sys.exit(1)
 
     agent = PurePursuitAgent()
     print("Running 1 episode...\n")
