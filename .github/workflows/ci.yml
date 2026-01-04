@@ -12,10 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     
-    - uses: DeterminateSystems/nix-installer-action@v21
-
-    - uses: DeterminateSystems/magic-nix-cache-action@v7
+    - uses: DeterminateSystems/nix-installer-action@v31
     
+    - uses: DeterminateSystems/magic-nix-cache-action@v7
+
     - name: Run Smoke Test
       run: |
-        nix develop --command bash -c "uv sync && xvfb-run -a ./scripts/quick_test.sh"
+        nix develop --command bash -c "uv sync && uv run scripts/smoke_test.py"
