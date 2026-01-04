@@ -17,10 +17,10 @@ from src.agents.baseline import PurePursuitAgent
 print("✓ Agent imports OK")
 
 # These should now be safe to import without triggering execution
-from src.train_ppo import *
+import src.train_ppo
 print("✓ Training imports OK")
 
-from src.eval_agent import *
+import src.eval_agent
 print("✓ Eval imports OK")
 
 print("✓ All smoke tests passed!")
