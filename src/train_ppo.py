@@ -9,13 +9,41 @@ Usage:
 import sys
 import argparse
 import numpy as np
+import subprocess
+import os
 
 # Fix numpy compatibility with old gym
 if not hasattr(np, 'bool8'):
     np.bool8 = np.bool_
 
+# Save original sys.argv before gym_torcs reads it
+# gym_torcs parses command line arguments on import, which interferes with our argparse
+original_argv = sys.argv.copy()
+sys.argv = [sys.argv[0]]
+
+try:
+    import gym
+    import gym_torcs
+    import gym_torcs.snakeoil3_gym as snakeoil3
+    import gym_torcs.torcs_env as torcs_env
+except ImportError as e:
+    print(f"Warning: Failed to import gym_torcs: {e}")
+    # Define dummy modules for smoke testing if needed
+    snakeoil3 = None
+    torcs_env = None
+
+# Restore sys.argv for argparse
+sys.argv = original_argv
+
+from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.vec_env import DummyVecEnv
+
+# Patch snakeoil3 to not parse command line args
+if snakeoil3:
+    snakeoil3.Client.parse_the_command_line = lambda self: None
+
 # Prevent gym-torcs from launching TORCS
-import subprocess
 original_popen = subprocess.Popen
 def no_launch_popen(args, **kwargs):
     if isinstance(args, list) and args and 'torcs' in str(args[0]):
@@ -27,8 +55,7 @@ def no_launch_popen(args, **kwargs):
 subprocess.Popen = no_launch_popen
 
 # Patch gym-torcs observation handler to fix missing 'lap' key
-try:
-    import gym_torcs.torcs_env as torcs_env
+if torcs_env:
     original_make_obs = torcs_env.TorcsEnv.make_observaton
 
     def patched_make_obs(self, raw_obs):
@@ -40,28 +67,6 @@ try:
         return original_make_obs(self, raw_obs)
 
     torcs_env.TorcsEnv.make_observaton = patched_make_obs
-except ImportError:
-    pass
-
-# Save original sys.argv before gym_torcs reads it
-original_argv = sys.argv.copy()
-sys.argv = [sys.argv[0]]
-
-import gym  # gym-torcs uses old gym API
-import gym_torcs
-import gym_torcs.snakeoil3_gym as snakeoil3
-
-# Patch snakeoil3 to not parse command line args
-# This prevents it from choking on our argparse arguments
-snakeoil3.Client.parse_the_command_line = lambda self: None
-
-# Restore sys.argv for argparse
-sys.argv = original_argv
-
-from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import CheckpointCallback
-from stable_baselines3.common.vec_env import DummyVecEnv
-import os
 
 
 def observation_preprocessor(dict_obs):
@@ -176,7 +181,6 @@ def main(args):
     env.close()
 
 
-if __name__ == '__main__':
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train PPO on TORCS')
     parser.add_argument('--env-id', default='Torcs-v0', help='Gym environment ID')
