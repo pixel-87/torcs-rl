@@ -6,12 +6,11 @@ requires-python = ">=3.10"
 dynamic = []
 
 dependencies = [
-    # TORCS wrapper (vendored locally)
-    # "gym-torcs @ git+https://github.com/dosssman/GymTorcs.git",
+    # TORCS wrapper
+    "gym-torcs @ git+https://github.com/dosssman/GymTorcs.git",
     # RL libraries
     "stable-baselines3[extra]>=2.0",
     "gymnasium>=0.29",
-    "gym>=0.26", # Required by vendored gym_torcs
     # Core dependencies
     "numpy>=1.24",
     "pandas>=2.0",
@@ -40,7 +39,7 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = []
+packages = ["src"]
 
 [tool.black]
 line-length = 100

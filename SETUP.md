@@ -45,7 +45,7 @@ uv sync            # Install Python dependencies
 
 2. In another terminal, run your RL agent:
    ```bash
-   uv run python agents/my_agent.py
+   uv run python src/agents/my_agent.py
    ```
 
 ## File Structure
