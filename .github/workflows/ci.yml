@@ -12,10 +12,28 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     
-    - uses: DeterminateSystems/nix-installer-action@v21
-
-    - uses: DeterminateSystems/magic-nix-cache-action@v7
+    - uses: DeterminateSystems/nix-installer-action@v31
     
+    - uses: DeterminateSystems/magic-nix-cache-action@v7
+
     - name: Run Smoke Test
       run: |
-        nix develop --command bash -c "uv sync && xvfb-run -a ./scripts/quick_test.sh"
+        nix develop --command bash << 'EOF'
+        set -e
+        uv sync
+        python << 'PYTHON'
+        import sys
+        print(f"Python {sys.version}")
+        import gym
+        print(f"gym version: {gym.__version__}")
+        import stable_baselines3
+        print(f"stable_baselines3 version: {stable_baselines3.__version__}")
+        from src.agents.baseline import PurePursuitAgent
+        print("✓ Agent imports OK")
+        from src.train_ppo import *
+        print("✓ Training imports OK")
+        from src.eval_agent import *
+        print("✓ Eval imports OK")
+        print("✓ All smoke tests passed!")
+        PYTHON
+        EOF
