@@ -14,7 +14,7 @@ sys.modules["gym_torcs.snakeoil3_gym"] = MagicMock()
 print("✓ Mocked gym_torcs for smoke test")
 
 from src.agents.baseline import PurePursuitAgent
-print("✓ Agent imports OK")
+print(f"✓ Agent imports OK: {PurePursuitAgent}")
 
 # These should now be safe to import without triggering execution
 import src.train_ppo
